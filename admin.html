@@ -130,7 +130,7 @@ try{
 function checkPassword(event){
   if(event) event.preventDefault();
   const val = document.getElementById('pwInput').value;
-  if(normalizePassword(val) === ADMIN_PASSWORD){
+  if(normalizePassword(val) === normalizePassword(ADMIN_PASSWORD)){
     document.getElementById('lockScreen').style.display='none';
     document.getElementById('dashboard').style.display='block';
     if(!supabase){
