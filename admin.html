@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Ovọ Ọto Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --orange:#EC642A; --yellow:#FAAA21; --cream:#FDE2CD; --cocoa:#642D0A; --line:rgba(100,45,10,0.16); }
+  *{box-sizing:border-box;}
+  body{ font-family:'Inter',sans-serif; background:var(--cream); color:var(--cocoa); margin:0; padding:40px 6vw 100px; }
+  h1{ font-family:'Fraunces',serif; font-size:1.9rem; margin-bottom:6px; }
+  .sub{ color:rgba(100,45,10,0.65); margin-bottom:36px; }
+  .card{ background:#fff; border:1px solid var(--line); border-radius:6px; padding:28px; margin-bottom:28px; }
+  .card h2{ font-family:'Fraunces',serif; font-size:1.2rem; margin-bottom:16px; }
+  label{ display:block; font-size:0.8rem; font-weight:600; margin:14px 0 6px; }
+  input[type=text], input[type=email], input[type=password], input[type=url], select, textarea{
+    width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:4px;
+    font-family:'Inter',sans-serif; font-size:0.92rem; background:var(--cream); color:var(--cocoa);
+  }
+  input[type=file]{ margin-top:4px; }
+  button{
+    background:var(--cocoa); color:var(--cream); border:none; padding:12px 24px;
+    border-radius:4px; font-size:0.85rem; letter-spacing:0.03em; cursor:pointer; margin-top:16px;
+  }
+  button:hover{ background:var(--orange); color:#fff; }
+  button.danger{ background:#8a2e2e; color:#fff; }
+  button.danger:hover{ background:#a83a3a; }
+  .status{ font-size:0.85rem; margin-top:10px; padding:10px 14px; border-radius:4px; display:none; }
+  .status.ok{ background:#e6f0e6; color:#2c5c2c; display:block; }
+  .status.err{ background:#f5e0df; color:#8a2e2e; display:block; }
+  .hint{ font-size:0.78rem; color:rgba(100,45,10,0.6); margin-top:4px; }
+  .item-row{ display:flex; align-items:center; gap:14px; padding:10px 0; border-bottom:1px solid var(--line); }
+  .item-row img{ width:56px; height:56px; object-fit:cover; border-radius:4px; }
+  .item-row .meta{ flex:1; font-size:0.85rem; }
+  .item-row button{ margin:0; padding:8px 14px; font-size:0.75rem; }
+  #lockScreen{ max-width:380px; margin:15vh auto; text-align:center; }
+  #dashboard{ display:none; }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media(max-width:600px){ .grid2{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<div id="lockScreen" class="card">
+  <h1>Ovọ Ọto Admin</h1>
+  <p class="sub">Enter your password to manage the portfolio.</p>
+  <input type="password" id="pwInput" placeholder="Password" onkeydown="if(event.key==='Enter') checkPassword()" autocapitalize="off" autocorrect="off" spellcheck="false">
+  <button onclick="checkPassword()">Enter</button>
+  <div class="status err" id="pwError">Incorrect password.</div>
+</div>
+
+<div id="dashboard">
+  <h1>Portfolio Admin</h1>
+  <p class="sub">Upload, edit, or remove content. Changes appear on the live site immediately.</p>
+
+  <div class="card">
+    <h2>Intro Section</h2>
+    <label>Studio Description (1–2 sentences, shown first)</label>
+    <textarea id="descInput" rows="2" placeholder="e.g. Ovọ Ọto is a fashion illustration and design studio working across croquis, flats, prints, and applied design."></textarea>
+    <label>Short Bio (shown just after)</label>
+    <textarea id="bioInput" rows="3"></textarea>
+    <label>Contact Email</label>
+    <input type="email" id="emailInput">
+    <label>Intro Photo</label>
+    <input type="file" id="photoInput" accept="image/*">
+    <label>Resume Link (Google Drive)</label>
+    <input type="url" id="resumeInput" placeholder="https://drive.google.com/file/d/...">
+    <div class="hint">In Google Drive: right-click your resume → Share → "Anyone with the link" → Copy link. Paste that link here.</div>
+    <button onclick="saveIntro()">Save Intro Section</button>
+    <div class="status" id="introStatus"></div>
+  </div>
+
+  <div class="card">
+    <h2>Add a Piece</h2>
+    <p class="hint" style="margin-top:-4px;">A "piece" can be a single standalone illustration, or a full collection. Select multiple images at once to group them — visitors will browse them together with next/prev arrows.</p>
+    <label>Section</label>
+    <select id="sectionSelect">
+      <option value="croquis">Croquis — Models in Outfits</option>
+      <option value="flats">Flats</option>
+      <option value="prints">Prints & Patterns</option>
+      <option value="usage">Posters & Applied Design</option>
+    </select>
+    <label>Image(s)</label>
+    <input type="file" id="itemImageInput" accept="image/*" multiple>
+    <div class="hint">Select one image for a standalone piece, or select several to group them as one collection.</div>
+    <label>Caption (optional)</label>
+    <input type="text" id="captionInput" placeholder="e.g. Ankara evening gown, 2026">
+    <button onclick="addItem()">Upload Piece</button>
+    <div class="status" id="itemStatus"></div>
+  </div>
+
+  <div class="card">
+    <h2>Manage Existing Pieces</h2>
+    <label>View section</label>
+    <select id="viewSectionSelect" onchange="renderManageList()">
+      <option value="croquis">Croquis — Models in Outfits</option>
+      <option value="flats">Flats</option>
+      <option value="prints">Prints & Patterns</option>
+      <option value="usage">Posters & Applied Design</option>
+    </select>
+    <div id="manageList" style="margin-top:16px;"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://svaoyfsilviunhrvnwyj.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2YW95ZnNpbHZpdW5ocnZud3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyOTEyNTIsImV4cCI6MjEwMTg2NzI1Mn0.FCc46LX3dr7tmOwO8OnlBDvYBWIU6lUoT_EQuQo7gAU";
+const ADMIN_PASSWORD = "ovooto2026"; // ← change this to whatever you like, then re-save the file
+const BUCKET = "portfolio-media";
+
+let supabase = null;
+try{
+  if(window.supabase){
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+}catch(e){
+  console.error('Supabase failed to initialize:', e);
+}
+
+function checkPassword(){
+  const val = document.getElementById('pwInput').value.trim();
+  if(val === ADMIN_PASSWORD){
+    document.getElementById('lockScreen').style.display='none';
+    document.getElementById('dashboard').style.display='block';
+    if(!supabase){
+      const warn = document.createElement('div');
+      warn.className = 'status err';
+      warn.style.display = 'block';
+      warn.textContent = 'Warning: could not connect to Supabase. Check your internet connection and reload this page.';
+      document.getElementById('dashboard').prepend(warn);
+      return;
+    }
+    loadIntro();
+    renderManageList();
+  } else {
+    document.getElementById('pwError').style.display='block';
+  }
+}
+
+async function uploadFile(file, folder){
+  const path = `${folder}/${Date.now()}_${file.name.replace(/\s+/g,'_')}`;
+  const { error } = await supabase.storage.from(BUCKET).upload(path, file);
+  if(error) throw error;
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+async function loadIntro(){
+  const { data } = await supabase.from('site_settings').select('*').limit(1).single();
+  if(data){
+    document.getElementById('descInput').value = data.description || '';
+    document.getElementById('bioInput').value = data.bio || '';
+    document.getElementById('emailInput').value = data.email || '';
+    document.getElementById('resumeInput').value = data.resume_url || '';
+  }
+}
+
+async function saveIntro(){
+  const statusEl = document.getElementById('introStatus');
+  statusEl.className = 'status'; statusEl.style.display='none';
+  try{
+    const updates = {
+      description: document.getElementById('descInput').value,
+      bio: document.getElementById('bioInput').value,
+      email: document.getElementById('emailInput').value,
+      resume_url: document.getElementById('resumeInput').value,
+    };
+    const photoFile = document.getElementById('photoInput').files[0];
+    if(photoFile) updates.photo_url = await uploadFile(photoFile, 'intro');
+
+    const { data: existing } = await supabase.from('site_settings').select('id').limit(1).single();
+    if(existing){
+      await supabase.from('site_settings').update(updates).eq('id', existing.id);
+    } else {
+      await supabase.from('site_settings').insert(updates);
+    }
+    statusEl.textContent = 'Saved. Your live site is updated.';
+    statusEl.className = 'status ok';
+  }catch(e){
+    statusEl.textContent = 'Error: ' + e.message;
+    statusEl.className = 'status err';
+  }
+}
+
+async function addItem(){
+  const statusEl = document.getElementById('itemStatus');
+  statusEl.className = 'status'; statusEl.style.display='none';
+  const files = Array.from(document.getElementById('itemImageInput').files);
+  if(!files.length){ statusEl.textContent='Please choose at least one image.'; statusEl.className='status err'; return; }
+  try{
+    const section = document.getElementById('sectionSelect').value;
+    const caption = document.getElementById('captionInput').value;
+    const pieceId = (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random()));
+    const baseOrder = Date.now();
+
+    for(let i = 0; i < files.length; i++){
+      const url = await uploadFile(files[i], 'items');
+      await supabase.from('portfolio_items').insert({
+        section, image_url: url, caption,
+        piece_id: pieceId,
+        sort_order: baseOrder + i
+      });
+    }
+
+    statusEl.textContent = files.length > 1
+      ? `Uploaded ${files.length} images as one piece.`
+      : 'Uploaded.';
+    statusEl.className = 'status ok';
+    document.getElementById('itemImageInput').value='';
+    document.getElementById('captionInput').value='';
+    renderManageList();
+  }catch(e){
+    statusEl.textContent = 'Error: ' + e.message;
+    statusEl.className = 'status err';
+  }
+}
+
+async function renderManageList(){
+  const section = document.getElementById('viewSectionSelect').value;
+  const list = document.getElementById('manageList');
+  list.innerHTML = 'Loading...';
+  const { data: items } = await supabase
+    .from('portfolio_items').select('*').eq('section', section).order('sort_order');
+  if(!items || !items.length){
+    list.innerHTML = '<p style="color:rgba(100,45,10,0.5); font-style:italic;">No pieces in this section yet.</p>';
+    return;
+  }
+
+  // Group by piece_id (fallback to item id for legacy single-image items)
+  const pieces = [];
+  const byId = new Map();
+  items.forEach(item=>{
+    const key = item.piece_id || item.id;
+    if(!byId.has(key)){
+      const piece = { key, caption: item.caption, images: [] };
+      byId.set(key, piece);
+      pieces.push(piece);
+    }
+    byId.get(key).images.push(item);
+  });
+
+  list.innerHTML = '';
+  pieces.forEach(piece=>{
+    const wrap = document.createElement('div');
+    wrap.style.marginBottom = '18px';
+    wrap.style.paddingBottom = '12px';
+    wrap.style.borderBottom = '1px solid var(--line)';
+
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;';
+    header.innerHTML = `
+      <div style="font-size:0.85rem; font-weight:600;">
+        ${piece.caption || '<em>No caption</em>'}
+        ${piece.images.length > 1 ? `<span style="color:rgba(100,45,10,0.5); font-weight:400;"> — ${piece.images.length} images</span>` : ''}
+      </div>
+      <button class="danger" onclick="deletePiece('${piece.images.map(i=>i.id).join(',')}')">Remove whole piece</button>
+    `;
+    wrap.appendChild(header);
+
+    const thumbRow = document.createElement('div');
+    thumbRow.style.cssText = 'display:flex; gap:8px; flex-wrap:wrap;';
+    piece.images.forEach(img=>{
+      const thumbWrap = document.createElement('div');
+      thumbWrap.style.cssText = 'position:relative;';
+      thumbWrap.innerHTML = `
+        <img src="${img.image_url}" style="width:64px; height:64px; object-fit:cover; border-radius:4px; display:block;">
+        <button onclick="deleteItem('${img.id}')" title="Remove this image"
+          style="position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%;
+          background:#8a2e2e; color:#fff; border:none; font-size:11px; line-height:1; cursor:pointer; padding:0; margin:0;">✕</button>
+      `;
+      thumbRow.appendChild(thumbWrap);
+    });
+    wrap.appendChild(thumbRow);
+    list.appendChild(wrap);
+  });
+}
+
+async function deleteItem(id){
+  if(!confirm('Remove this image?')) return;
+  await supabase.from('portfolio_items').delete().eq('id', id);
+  renderManageList();
+}
+
+async function deletePiece(idsCsv){
+  const ids = idsCsv.split(',');
+  const msg = ids.length > 1 ? `Remove this whole piece (${ids.length} images)?` : 'Remove this piece?';
+  if(!confirm(msg)) return;
+  await supabase.from('portfolio_items').delete().in('id', ids);
+  renderManageList();
+}
+</script>
+</body>
+</html>
