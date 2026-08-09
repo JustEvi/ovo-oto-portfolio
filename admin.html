@@ -42,10 +42,10 @@
 </head>
 <body>
 
-<form id="lockScreen" class="card" onsubmit="checkPassword(event)">
+<form id="lockScreen" class="card">
   <h1>Ovọ Ọto Admin</h1>
   <p class="sub">Enter your password to manage the portfolio.</p>
-  <input type="password" id="pwInput" placeholder="Password" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false">
+  <input type="password" id="pwInput" placeholder="Password" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" required>
   <button type="submit">Enter</button>
   <div class="status" id="pwError" style="display:none;">Incorrect password.</div>
 </form>
@@ -108,6 +108,7 @@
 const SUPABASE_URL = "https://svaoyfsilviunhrvnwyj.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2YW95ZnNpbHZpdW5ocnZud3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyOTEyNTIsImV4cCI6MjEwMTg2NzI1Mn0.FCc46LX3dr7tmOwO8OnlBDvYBWIU6lUoT_EQuQo7gAU";
 const ADMIN_PASSWORD = "ovooto2026"; // change this, then re-save the file
+const ADMIN_SESSION_KEY = "ovooto-admin-authenticated";
 
 function normalizePassword(value){
   return value
@@ -127,27 +128,42 @@ try{
   console.error('Supabase failed to initialize:', e);
 }
 
-function checkPassword(event){
-  if(event) event.preventDefault();
-  const val = document.getElementById('pwInput').value;
-  if(normalizePassword(val) === normalizePassword(ADMIN_PASSWORD)){
-    document.getElementById('lockScreen').style.display='none';
-    document.getElementById('dashboard').style.display='block';
-    if(!supabase){
+function showDashboard(){
+  document.getElementById('lockScreen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  if(!supabase){
+    const existingWarn = document.getElementById('supabaseWarning');
+    if(!existingWarn){
       const warn = document.createElement('div');
+      warn.id = 'supabaseWarning';
       warn.className = 'status err';
       warn.style.display = 'block';
       warn.textContent = 'Warning: could not connect to Supabase. Check your internet connection and reload this page.';
       document.getElementById('dashboard').prepend(warn);
-      return;
     }
-    loadIntro();
-    renderManageList();
+    return;
+  }
+  loadIntro();
+  renderManageList();
+}
+
+function checkPassword(event){
+  if(event) event.preventDefault();
+  const val = document.getElementById('pwInput').value;
+  if(normalizePassword(val) === normalizePassword(ADMIN_PASSWORD)){
+    sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
+    document.getElementById('pwError').style.display = 'none';
+    showDashboard();
   } else {
     const errEl = document.getElementById('pwError');
     errEl.textContent = 'Incorrect password.';
     errEl.style.display='block';
   }
+}
+
+document.getElementById('lockScreen').addEventListener('submit', checkPassword);
+if(sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true'){
+  showDashboard();
 }
 
 async function uploadFile(file, folder){
