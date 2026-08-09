@@ -42,13 +42,13 @@
 </head>
 <body>
 
-<div id="lockScreen" class="card">
+<form id="lockScreen" class="card" action="javascript:void(0);">
   <h1>Ovọ Ọto Admin</h1>
   <p class="sub">Enter your password to manage the portfolio.</p>
-  <input type="password" id="pwInput" placeholder="Password" onkeydown="if(event.key==='Enter') checkPassword()" autocapitalize="off" autocorrect="off" spellcheck="false">
-  <button onclick="checkPassword()">Enter</button>
+  <input type="password" id="pwInput" placeholder="Password" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false">
+  <button type="submit">Enter</button>
   <div class="status" id="pwError" style="display:none;">Incorrect password.</div>
-</div>
+</form>
 
 <div id="dashboard">
   <h1>Portfolio Admin</h1>
@@ -108,23 +108,32 @@
 const SUPABASE_URL = "https://svaoyfsilviunhrvnwyj.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2YW95ZnNpbHZpdW5ocnZud3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyOTEyNTIsImV4cCI6MjEwMTg2NzI1Mn0.FCc46LX3dr7tmOwO8OnlBDvYBWIU6lUoT_EQuQo7gAU";
 const ADMIN_PASSWORD = "ovooto2026"; // change this, then re-save the file
+
+function normalizePassword(value){
+  return value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[\s\u200B-\u200D\uFEFF]/g, '')
+    .toLowerCase();
+}
 const BUCKET = "portfolio-media";
 
-let supabase = null;
+let supabaseClient = null;
 try{
   if(window.supabase){
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
 }catch(e){
   console.error('Supabase failed to initialize:', e);
 }
 
-function checkPassword(){
-  const val = document.getElementById('pwInput').value.trim();
-  if(val === ADMIN_PASSWORD){
+function checkPassword(event){
+  if(event) event.preventDefault();
+  const val = document.getElementById('pwInput').value;
+  if(normalizePassword(val) === ADMIN_PASSWORD){
     document.getElementById('lockScreen').style.display='none';
     document.getElementById('dashboard').style.display='block';
-    if(!supabase){
+    if(!supabaseClient){
       const warn = document.createElement('div');
       warn.className = 'status err';
       warn.style.display = 'block';
@@ -136,21 +145,23 @@ function checkPassword(){
     renderManageList();
   } else {
     const errEl = document.getElementById('pwError');
-    errEl.textContent = 'Incorrect password. (You typed ' + val.length + ' characters.)';
+    errEl.textContent = 'Incorrect password.';
     errEl.style.display='block';
   }
 }
 
+document.getElementById('lockScreen').addEventListener('submit', checkPassword);
+
 async function uploadFile(file, folder){
   const path = `${folder}/${Date.now()}_${file.name.replace(/\s+/g,'_')}`;
-  const { error } = await supabase.storage.from(BUCKET).upload(path, file);
+  const { error } = await supabaseClient.storage.from(BUCKET).upload(path, file);
   if(error) throw error;
-  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  const { data } = supabaseClient.storage.from(BUCKET).getPublicUrl(path);
   return data.publicUrl;
 }
 
 async function loadIntro(){
-  const { data } = await supabase.from('site_settings').select('*').limit(1).single();
+  const { data } = await supabaseClient.from('site_settings').select('*').limit(1).single();
   if(data){
     document.getElementById('descInput').value = data.description || '';
     document.getElementById('bioInput').value = data.bio || '';
@@ -172,11 +183,11 @@ async function saveIntro(){
     const photoFile = document.getElementById('photoInput').files[0];
     if(photoFile) updates.photo_url = await uploadFile(photoFile, 'intro');
 
-    const { data: existing } = await supabase.from('site_settings').select('id').limit(1).single();
+    const { data: existing } = await supabaseClient.from('site_settings').select('id').limit(1).single();
     if(existing){
-      await supabase.from('site_settings').update(updates).eq('id', existing.id);
+      await supabaseClient.from('site_settings').update(updates).eq('id', existing.id);
     } else {
-      await supabase.from('site_settings').insert(updates);
+      await supabaseClient.from('site_settings').insert(updates);
     }
     statusEl.textContent = 'Saved. Your live site is updated.';
     statusEl.className = 'status ok';
@@ -199,7 +210,7 @@ async function addItem(){
 
     for(let i = 0; i < files.length; i++){
       const url = await uploadFile(files[i], 'items');
-      await supabase.from('portfolio_items').insert({
+      await supabaseClient.from('portfolio_items').insert({
         section, image_url: url, caption,
         piece_id: pieceId,
         sort_order: baseOrder + i
@@ -223,7 +234,7 @@ async function renderManageList(){
   const section = document.getElementById('viewSectionSelect').value;
   const list = document.getElementById('manageList');
   list.innerHTML = 'Loading...';
-  const { data: items } = await supabase
+  const { data: items } = await supabaseClient
     .from('portfolio_items').select('*').eq('section', section).order('sort_order');
   if(!items || !items.length){
     list.innerHTML = '<p style="color:rgba(100,45,10,0.5); font-style:italic;">No pieces in this section yet.</p>';
@@ -281,7 +292,7 @@ async function renderManageList(){
 
 async function deleteItem(id){
   if(!confirm('Remove this image?')) return;
-  await supabase.from('portfolio_items').delete().eq('id', id);
+  await supabaseClient.from('portfolio_items').delete().eq('id', id);
   renderManageList();
 }
 
@@ -289,7 +300,7 @@ async function deletePiece(idsCsv){
   const ids = idsCsv.split(',');
   const msg = ids.length > 1 ? `Remove this whole piece (${ids.length} images)?` : 'Remove this piece?';
   if(!confirm(msg)) return;
-  await supabase.from('portfolio_items').delete().in('id', ids);
+  await supabaseClient.from('portfolio_items').delete().in('id', ids);
   renderManageList();
 }
 </script>
