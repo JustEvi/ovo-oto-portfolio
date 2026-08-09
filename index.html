@@ -319,13 +319,13 @@ try{
     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
 }catch(e){
-  // Silently ignore — site runs fine with placeholders until connected.
+  // Silently ignore - site runs fine with placeholders until connected.
 }
 
 let currentPieceImages = [];
 let currentPieceIndex = 0;
 
-// Sample/demo content — shown only when Supabase isn't connected yet, so you can
+// Sample/demo content - shown only when Supabase isn't connected yet, so you can
 // preview how the grid and lightbox will look and behave once your own images are in.
 // This is replaced automatically the moment your Supabase project is connected.
 const SAMPLE_DATA = {
@@ -387,7 +387,7 @@ function renderSampleContent(){
       el.addEventListener('click', ()=> openLightbox(images, 0));
       grid.appendChild(el);
     });
-    count.textContent = pieces.length + (pieces.length===1 ? ' piece' : ' pieces') + ' · sample';
+    count.textContent = pieces.length + (pieces.length===1 ? ' piece' : ' pieces') + ' - sample';
   });
 }
 
@@ -411,7 +411,7 @@ async function loadSiteContent(){
         document.getElementById('introPhotoPlaceholder').style.display='none';
       }
     }
-  }catch(e){ /* settings row may not exist yet — fine */ }
+  }catch(e){ /* settings row may not exist yet - fine */ }
 
   const sections = ['croquis','flats','prints','usage'];
   for(const key of sections){
@@ -425,7 +425,7 @@ async function loadSiteContent(){
       const grid = document.getElementById('grid-' + key);
       const count = document.getElementById('count-' + key);
       if(items && items.length){
-        // Group images into "pieces" — items sharing a piece_id belong to one
+        // Group images into "pieces" - items sharing a piece_id belong to one
         // collection and open together in the lightbox. Items with no piece_id
         // (or a unique one) are standalone single-image pieces.
         const pieces = [];
@@ -455,7 +455,7 @@ async function loadSiteContent(){
         });
         count.textContent = pieces.length + (pieces.length===1 ? ' piece' : ' pieces');
       }
-    }catch(e){ /* table may not exist yet — fine, placeholder stays */ }
+    }catch(e){ /* table may not exist yet - fine, placeholder stays */ }
   }
 }
 

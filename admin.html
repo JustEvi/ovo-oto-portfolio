@@ -107,7 +107,7 @@
 <script>
 const SUPABASE_URL = "https://svaoyfsilviunhrvnwyj.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2YW95ZnNpbHZpdW5ocnZud3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyOTEyNTIsImV4cCI6MjEwMTg2NzI1Mn0.FCc46LX3dr7tmOwO8OnlBDvYBWIU6lUoT_EQuQo7gAU";
-const ADMIN_PASSWORD = "ovooto2026"; // ← change this to whatever you like, then re-save the file
+const ADMIN_PASSWORD = "ovooto2026"; // change this, then re-save the file
 const BUCKET = "portfolio-media";
 
 let supabase = null;
@@ -135,7 +135,9 @@ function checkPassword(){
     loadIntro();
     renderManageList();
   } else {
-    document.getElementById('pwError').style.display='block';
+    const errEl = document.getElementById('pwError');
+    errEl.textContent = 'Incorrect password. (You typed ' + val.length + ' characters.)';
+    errEl.style.display='block';
   }
 }
 
@@ -253,7 +255,7 @@ async function renderManageList(){
     header.innerHTML = `
       <div style="font-size:0.85rem; font-weight:600;">
         ${piece.caption || '<em>No caption</em>'}
-        ${piece.images.length > 1 ? `<span style="color:rgba(100,45,10,0.5); font-weight:400;"> — ${piece.images.length} images</span>` : ''}
+        ${piece.images.length > 1 ? `<span style="color:rgba(100,45,10,0.5); font-weight:400;"> - ${piece.images.length} images</span>` : ''}
       </div>
       <button class="danger" onclick="deletePiece('${piece.images.map(i=>i.id).join(',')}')">Remove whole piece</button>
     `;
@@ -268,7 +270,7 @@ async function renderManageList(){
         <img src="${img.image_url}" style="width:64px; height:64px; object-fit:cover; border-radius:4px; display:block;">
         <button onclick="deleteItem('${img.id}')" title="Remove this image"
           style="position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%;
-          background:#8a2e2e; color:#fff; border:none; font-size:11px; line-height:1; cursor:pointer; padding:0; margin:0;">✕</button>
+          background:#8a2e2e; color:#fff; border:none; font-size:11px; line-height:1; cursor:pointer; padding:0; margin:0;">X</button>
       `;
       thumbRow.appendChild(thumbWrap);
     });
