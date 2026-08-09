@@ -47,7 +47,7 @@
   <p class="sub">Enter your password to manage the portfolio.</p>
   <input type="password" id="pwInput" placeholder="Password" onkeydown="if(event.key==='Enter') checkPassword()" autocapitalize="off" autocorrect="off" spellcheck="false">
   <button onclick="checkPassword()">Enter</button>
-  <div class="status err" id="pwError">Incorrect password.</div>
+  <div class="status" id="pwError" style="display:none;">Incorrect password.</div>
 </div>
 
 <div id="dashboard">
