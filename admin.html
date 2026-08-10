@@ -147,13 +147,30 @@ function showDashboard(){
   renderManageList();
 }
 
+function saveAdminSession(){
+  try{
+    sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
+  }catch(e){
+    console.warn('Admin session could not be saved:', e);
+  }
+}
+
+function hasAdminSession(){
+  try{
+    return sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true';
+  }catch(e){
+    console.warn('Admin session could not be read:', e);
+    return false;
+  }
+}
+
 function checkPassword(event){
   if(event) event.preventDefault();
   const val = document.getElementById('pwInput').value;
   if(normalizePassword(val) === normalizePassword(ADMIN_PASSWORD)){
-    sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
     document.getElementById('pwError').style.display = 'none';
     showDashboard();
+    saveAdminSession();
   } else {
     const errEl = document.getElementById('pwError');
     errEl.textContent = 'Incorrect password.';
@@ -162,7 +179,7 @@ function checkPassword(event){
 }
 
 document.getElementById('lockScreen').addEventListener('submit', checkPassword);
-if(sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true'){
+if(hasAdminSession()){
   showDashboard();
 }
 
